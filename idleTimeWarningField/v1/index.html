@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="APPIAN_JS_SDK_URI"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      #warning-banner {
+        display: none; 
+        background-color: #f8e8ec; 
+        color: #d13535;
+        padding: 15px;
+        text-align: center;
+        border: 1px solid #d13535;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      #timer {
+        font-family: monospace;
+        font-size: 18px;
+      }
+    </style>
+    <script>
+      (function () {
+        var lastActivityTime = Date.now();
+        var warningThresholdMs = null;
+        var absoluteTimeoutMs = null;
+        var checkIntervalId = null;
+        var isWarningActive = false;
+        var activityPulse = null;
+        
+        // 1. Set a fallback default message just in case the Appian developer leaves it blank
+        var defaultMessage = "Warning: You will be logged out due to inactivity in ";
+
+        function resetActivity() {
+          lastActivityTime = Date.now();
+          if (isWarningActive) {
+            document.getElementById("warning-banner").style.display = "none";
+            Appian.Component.saveValue("showWarning", false);
+            isWarningActive = false;
+          }
+        }
+
+        function startInactivityTimer() {
+          if (checkIntervalId !== null) {
+            clearInterval(checkIntervalId);
+          }
+          
+          checkIntervalId = setInterval(function () {
+            if (warningThresholdMs == null || absoluteTimeoutMs == null) return;
+
+            var now = Date.now();
+            var inactiveMs = now - lastActivityTime;
+
+            if (inactiveMs >= warningThresholdMs) {
+              var banner = document.getElementById("warning-banner");
+              var timerSpan = document.getElementById("timer");
+              
+              if (!isWarningActive) {
+                banner.style.display = "block";
+                Appian.Component.saveValue("showWarning", true);
+                isWarningActive = true;
+              }
+
+              var timeLeftMs = absoluteTimeoutMs - inactiveMs;
+              
+              if (timeLeftMs <= 0) {
+                timerSpan.innerText = "00:00";
+              } else {
+                var totalSeconds = Math.floor(timeLeftMs / 1000);
+                var minutes = Math.floor(totalSeconds / 60);
+                var seconds = totalSeconds % 60;
+                timerSpan.innerText = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+              }
+            }
+          }, 1000); 
+        }
+
+        // 2. Listen for the new warningMessage parameter from Appian
+        Appian.Component.onNewValue(function (newValues) {
+          
+          // 1. Listen for the external pulse from Appian
+          // If this value changes, the user did something outside the iframe!
+          if (newValues.activityPulse) {
+            resetActivity();
+          }
+
+          // 2. Handle the warning message (from our previous fix)
+          var customMessage = newValues.warningMessage || defaultMessage;
+          document.getElementById("message-text").innerText = customMessage;
+
+          // 3. Handle the thresholds
+          var timeoutMinutes = newValues.timeoutMinutes;
+          var warnBeforeMinutes = newValues.warnBeforeMinutes;
+
+          if (timeoutMinutes && warnBeforeMinutes) {
+            absoluteTimeoutMs = timeoutMinutes * 60 * 1000;
+            warningThresholdMs = (timeoutMinutes - warnBeforeMinutes) * 60 * 1000;
+          }
+
+          // Start or restart the timer
+          startInactivityTimer();
+        });
+
+        window.addEventListener("mousemove", resetActivity);
+        window.addEventListener("keydown", resetActivity);
+        window.addEventListener("click", resetActivity);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="warning-banner">
+      <span id="message-text"></span> <span id="timer">00:00</span>
+    </div>
+  </body>
+</html>

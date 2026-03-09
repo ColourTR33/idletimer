@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appian-component-plugin name="Idle Time Warning Components" key="com.appiancs.idleTimeWarning">
+  <plugin-info>
+    <description>Shows a warning when the user is inactive.</description>
+    <version>1.0.2</version>
+    <vendor name="Appian CS" url="https://www.appiancs.com"/>
+    <support supported="false" url="https://community.appian.com"/>
+  </plugin-info>
+
+  <component rule-name="idleTimeWarningField" version="1.0.2">
+    <icon-file>images/icon.svg</icon-file>
+    <html-entry-point>index.html</html-entry-point>
+    <sdk-version>2.0.0</sdk-version>
+    <supported-user-agents>chrome firefox edge safari mobile</supported-user-agents>
+    <parameter>
+      <name>activityPulse</name>
+      <type>Text</type>
+      <category>input-only</category>
+      <description>Pass a changing value (like now()) from SAIL to reset the idle timer.</description>
+    </parameter>
+
+    <parameter>
+      <name>showWarning</name>
+      <type>Boolean</type>
+      <category>input-output</category>
+      <placeholder>
+        <input>false</input>
+        <output>a!save(local!showWarning, fv!value)</output>
+      </placeholder>
+    </parameter>
+
+    <parameter>
+      <name>timeoutMinutes</name>
+      <type>Integer</type>
+      <category>input-only</category>
+      <required>Timeout (minutes) is required.</required>
+      <default-value>60</default-value>
+    </parameter>
+
+    <parameter>
+      <name>warnBeforeMinutes</name>
+      <type>Integer</type>
+      <category>input-only</category>
+      <default-value>5</default-value>
+    </parameter>
+
+    <parameter>
+      <name>warningMessage</name>
+      <type>Text</type>
+      <category>input-only</category>
+      <description>The custom text to display before the countdown clock.</description>
+    </parameter>
+</component>
+</appian-component-plugin>
