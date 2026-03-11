@@ -36,6 +36,7 @@
         // 1. Set a fallback default message just in case the Appian developer leaves it blank
         var defaultMessage = "Warning: You will be logged out due to inactivity in ";
 
+        // Function to reset variables in case of user activity (user activity is described below)
         function resetActivity() {
           lastActivityTime = Date.now();
           if (isWarningActive) {
@@ -44,18 +45,18 @@
             isWarningActive = false;
           }
         }
-
+        // Function to start a timer for user inactivity - first deleting existing timers - then timer logic
         function startInactivityTimer() {
           if (checkIntervalId !== null) {
             clearInterval(checkIntervalId);
           }
-          
+          // Function to start a timer for user inactivity, running every 1000ms (1 sec)
           checkIntervalId = setInterval(function () {
             if (warningThresholdMs == null || absoluteTimeoutMs == null) return;
 
             var now = Date.now();
             var inactiveMs = now - lastActivityTime;
-
+            // checking if idle time passes given limit (timeoutMinutes - warnBeforeMinutes), if so show warning banner
             if (inactiveMs >= warningThresholdMs) {
               var banner = document.getElementById("warning-banner");
               var timerSpan = document.getElementById("timer");
@@ -67,7 +68,7 @@
               }
 
               var timeLeftMs = absoluteTimeoutMs - inactiveMs;
-              
+              // calculating timer to show in MM:SS (converted from raw ms) updating every second
               if (timeLeftMs <= 0) {
                 timerSpan.innerText = "00:00";
               } else {
@@ -80,7 +81,7 @@
           }, 1000); 
         }
 
-        // 2. Listen for the new warningMessage parameter from Appian
+        // Listen for the new warningMessage/timeoutMinutes/warnBeforeMinutes parameter from Appian
         Appian.Component.onNewValue(function (newValues) {
           
           // 1. Listen for the external pulse from Appian
