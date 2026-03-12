@@ -8,27 +8,29 @@
         margin: 0;
         font-family: Arial, sans-serif;
       }
+      /* Base styles for the banner */
       #warning-banner {
         display: none; 
+        padding: 15px;
+        text-align: center;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 16px;
+        transition: background-color 0.5s ease; /* Smooth color transition */
+      }
+
+      /* The "Standard" Skin */
+      .standard-look {
         background-color: #fcb858; 
         color: #000000;
-        padding: 15px;
-        text-align: center;
         border: 1px solid #d13535;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 16px;
       }
-      #hot-warning-banner {
-        display: none; 
+
+      /* The "Hot" Skin */
+      .hot-look {
         background-color: #d13535; 
         color: #f8e8ec;
-        padding: 15px;
-        text-align: center;
-        border: 1px solid #000000;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 16px;
+        border: 2px solid #000000;
       }
       #timer {
         font-family: monospace;
@@ -39,6 +41,7 @@
       (function () {
         var lastActivityTime = Date.now();
         var warningThresholdMs = null;
+        var hotWarningThresholdMs = null;
         var absoluteTimeoutMs = null;
         var checkIntervalId = null;
         var isWarningActive = false;
@@ -51,7 +54,9 @@
         function resetActivity() {
           lastActivityTime = Date.now();
           if (isWarningActive) {
-            document.getElementById("warning-banner").style.display = "none";
+            var banner = document.getElementById("warning-banner");
+            banner.style.display = "none";
+            banner.className = "standard-look"; // Reset to default skin
             Appian.Component.saveValue("showWarning", false);
             isWarningActive = false;
           }
@@ -67,21 +72,18 @@
 
             var now = Date.now();
             var inactiveMs = now - lastActivityTime;
+            var banner = document.getElementById("warning-banner");
+            var timerSpan = document.getElementById("timer");
             // checking if idle time passes given limit (timeoutMinutes - warnBeforeMinutes), if so show warning banner
             if (inactiveMs >= warningThresholdMs) {
+              banner.style.display = "block";
+              isWarningActive = true;
+              Appian.Component.saveValue("showWarning", true);
               // checking if there is less or equal to 30 sec left until timeOut, to obtain special warning banner 
               if (inactiveMs >= hotWarningThresholdMs) {
-                var banner = document.getElementById("hot-warning-banner");
-                var timerSpan = document.getElementById("timer");
+                banner.className = "hot-look"
               } else {
-                var banner = document.getElementById("warning-banner");
-                var timerSpan = document.getElementById("timer");
-              }
-                
-              if (!isWarningActive) {
-                banner.style.display = "block";
-                Appian.Component.saveValue("showWarning", true);
-                isWarningActive = true;
+                banner.className = "standard-look"
               }
 
               var timeLeftMs = absoluteTimeoutMs - inactiveMs;
@@ -132,8 +134,9 @@
     </script>
   </head>
   <body>
-    <div id="warning-banner">
-      <span id="message-text"></span> <span id="timer">00:00</span>
+    <div id="warning-banner" class="standard-look">
+      <span id="message-text"></span>
+      <span id="timer">00:00</span>
     </div>
   </body>
 </html>
