@@ -2,12 +2,12 @@
 <appian-component-plugin name="Idle Time Warning Components" key="com.appiancs.idleTimeWarning">
   <plugin-info>
     <description>Shows a warning when the user is inactive.</description>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <vendor name="Appian CS" url="https://www.appiancs.com"/>
     <support supported="false" url="https://community.appian.com"/>
   </plugin-info>
 
-  <component rule-name="idleTimeWarningField" version="1.0.2">
+  <component rule-name="idleTimeWarningField" version="1.0.3">
     <icon-file>images/icon.svg</icon-file>
     <html-entry-point>index.html</html-entry-point>
     <sdk-version>2.0.0</sdk-version>

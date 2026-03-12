@@ -10,11 +10,22 @@
       }
       #warning-banner {
         display: none; 
-        background-color: #f8e8ec; 
-        color: #d13535;
+        background-color: #fcb858; 
+        color: #000000;
         padding: 15px;
         text-align: center;
         border: 1px solid #d13535;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      #hot-warning-banner {
+        display: none; 
+        background-color: #d13535; 
+        color: #f8e8ec;
+        padding: 15px;
+        text-align: center;
+        border: 1px solid #000000;
         border-radius: 4px;
         font-weight: bold;
         font-size: 16px;
@@ -58,9 +69,15 @@
             var inactiveMs = now - lastActivityTime;
             // checking if idle time passes given limit (timeoutMinutes - warnBeforeMinutes), if so show warning banner
             if (inactiveMs >= warningThresholdMs) {
-              var banner = document.getElementById("warning-banner");
-              var timerSpan = document.getElementById("timer");
-              
+              // checking if there is less or equal to 30 sec left until timeOut, to obtain special warning banner 
+              if (inactiveMs >= hotWarningThresholdMs) {
+                var banner = document.getElementById("hot-warning-banner");
+                var timerSpan = document.getElementById("timer");
+              } else {
+                var banner = document.getElementById("warning-banner");
+                var timerSpan = document.getElementById("timer");
+              }
+                
               if (!isWarningActive) {
                 banner.style.display = "block";
                 Appian.Component.saveValue("showWarning", true);
@@ -101,6 +118,7 @@
           if (timeoutMinutes && warnBeforeMinutes) {
             absoluteTimeoutMs = timeoutMinutes * 60 * 1000;
             warningThresholdMs = (timeoutMinutes - warnBeforeMinutes) * 60 * 1000;
+            hotWarningThresholdMs = (timeoutMinutes - 0.5) * 60 * 1000;
           }
 
           // Start or restart the timer
