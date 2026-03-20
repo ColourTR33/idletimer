@@ -8,16 +8,29 @@
         margin: 0;
         font-family: Arial, sans-serif;
       }
+      /* Base styles for the banner */
       #warning-banner {
         display: none; 
-        background-color: #f8e8ec; 
-        color: #d13535;
         padding: 15px;
         text-align: center;
-        border: 1px solid #d13535;
         border-radius: 4px;
         font-weight: bold;
         font-size: 16px;
+        transition: background-color 0.5s ease; /* Smooth color transition */
+      }
+
+      /* The "Standard" Skin */
+      .standard-look {
+        background-color: #fcb858; 
+        color: #000000;
+        border: 1px solid #d13535;
+      }
+
+      /* The "Hot" Skin */
+      .hot-look {
+        background-color: #d13535; 
+        color: #f8e8ec;
+        border: 2px solid #000000;
       }
       #timer {
         font-family: monospace;
@@ -28,6 +41,7 @@
       (function () {
         var lastActivityTime = Date.now();
         var warningThresholdMs = null;
+        var hotWarningThresholdMs = null;
         var absoluteTimeoutMs = null;
         var checkIntervalId = null;
         var isWarningActive = false;
@@ -36,38 +50,44 @@
         // 1. Set a fallback default message just in case the Appian developer leaves it blank
         var defaultMessage = "Warning: You will be logged out due to inactivity in ";
 
+        // Function to reset variables in case of user activity (user activity is described below)
         function resetActivity() {
           lastActivityTime = Date.now();
           if (isWarningActive) {
-            document.getElementById("warning-banner").style.display = "none";
+            var banner = document.getElementById("warning-banner");
+            banner.style.display = "none";
+            banner.className = "standard-look"; // Reset to default skin
             Appian.Component.saveValue("showWarning", false);
             isWarningActive = false;
           }
         }
-
+        // Function to start a timer for user inactivity - first deleting existing timers - then timer logic
         function startInactivityTimer() {
           if (checkIntervalId !== null) {
             clearInterval(checkIntervalId);
           }
-          
+          // Function to start a timer for user inactivity, running every 1000ms (1 sec)
           checkIntervalId = setInterval(function () {
             if (warningThresholdMs == null || absoluteTimeoutMs == null) return;
 
             var now = Date.now();
             var inactiveMs = now - lastActivityTime;
-
+            var banner = document.getElementById("warning-banner");
+            var timerSpan = document.getElementById("timer");
+            // checking if idle time passes given limit (timeoutMinutes - warnBeforeMinutes), if so show warning banner
             if (inactiveMs >= warningThresholdMs) {
-              var banner = document.getElementById("warning-banner");
-              var timerSpan = document.getElementById("timer");
-              
-              if (!isWarningActive) {
-                banner.style.display = "block";
-                Appian.Component.saveValue("showWarning", true);
-                isWarningActive = true;
+              banner.style.display = "block";
+              isWarningActive = true;
+              Appian.Component.saveValue("showWarning", true);
+              // checking if there is less or equal to 30 sec left until timeOut, to obtain special warning banner 
+              if (inactiveMs >= hotWarningThresholdMs) {
+                banner.className = "hot-look"
+              } else {
+                banner.className = "standard-look"
               }
 
               var timeLeftMs = absoluteTimeoutMs - inactiveMs;
-              
+              // calculating timer to show in MM:SS (converted from raw ms) updating every second
               if (timeLeftMs <= 0) {
                 timerSpan.innerText = "00:00";
               } else {
@@ -80,7 +100,7 @@
           }, 1000); 
         }
 
-        // 2. Listen for the new warningMessage parameter from Appian
+        // Listen for the new warningMessage/timeoutMinutes/warnBeforeMinutes parameter from Appian
         Appian.Component.onNewValue(function (newValues) {
           
           // 1. Listen for the external pulse from Appian
@@ -100,6 +120,7 @@
           if (timeoutMinutes && warnBeforeMinutes) {
             absoluteTimeoutMs = timeoutMinutes * 60 * 1000;
             warningThresholdMs = (timeoutMinutes - warnBeforeMinutes) * 60 * 1000;
+            hotWarningThresholdMs = (timeoutMinutes - 0.5) * 60 * 1000;
           }
 
           // Start or restart the timer
@@ -113,8 +134,9 @@
     </script>
   </head>
   <body>
-    <div id="warning-banner">
-      <span id="message-text"></span> <span id="timer">00:00</span>
+    <div id="warning-banner" class="standard-look">
+      <span id="message-text"></span>
+      <span id="timer">00:00</span>
     </div>
   </body>
 </html>
